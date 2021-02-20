@@ -28,7 +28,7 @@ class MetalContext;
 // @brief conv layer metal acc
 class MetalLayerAcc : public AbstractLayerAcc {
 public:
-    Status Init(Context *context, LayerParam *param, LayerResource *resource,
+    virtual Status Init(Context *context, LayerParam *param, LayerResource *resource,
                 const std::vector<Blob *> &inputs,
                 const std::vector<Blob *> &outputs);
 
@@ -43,9 +43,13 @@ public:
     
 
 public:
-    virtual std::string KernelName();
+    virtual std::string KernelName(const std::vector<Blob *> &inputs,
+                                   const std::vector<Blob *> &outputs);
     
     virtual Status ComputeThreadSize(const std::vector<Blob *> &inputs,
+                                     const std::vector<Blob *> &outputs,
+                                     MTLSize &size);
+    virtual Status ComputeThreadgroupSize(const std::vector<Blob *> &inputs,
                                      const std::vector<Blob *> &outputs,
                                      MTLSize &size);
     virtual Status SetKernelEncoderParam(id<MTLComputeCommandEncoder> encoder,
@@ -60,6 +64,9 @@ protected:
     MetalContext *context_ = nullptr;
 
     id<MTLBuffer> buffer_param_ = nil;
+    
+    NSString *kernel_label_ = nil;
+    NSString * GetKernelLabel();
 
 private:
     virtual std::vector<DataFormat> SupportDataFormat(DataType data_type, int dims_size);
@@ -102,7 +109,7 @@ id<MTLBuffer> AllocatePackedNC4HW4MetalBufferFormRawBuffer(RawBuffer buffer, Dim
         virtual Status Reshape(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs);                 \
         virtual Status AllocateBufferParam(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs);     \
         virtual Status Forward(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs);                 \
-        virtual std::string KernelName(); \
+        virtual std::string KernelName(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs); \
         virtual Status ComputeThreadSize(const std::vector<Blob *> &inputs, \
                                  const std::vector<Blob *> &outputs, \
                                  MTLSize &size); \

@@ -51,7 +51,7 @@ Status MetalNormalizeLayerAcc::AllocateBufferParam(const std::vector<Blob *> &in
     return TNN_OK;
 }
 
-std::string MetalNormalizeLayerAcc::KernelName() {
+std::string MetalNormalizeLayerAcc::KernelName(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs) {
     return "";
 }
 
@@ -72,9 +72,7 @@ Status MetalNormalizeLayerAcc::Forward(const std::vector<Blob *> &inputs, const 
     auto layer_param  = dynamic_cast<NormalizeLayerParam *>(param_);
     auto context_impl = context_->getMetalContextImpl();
     auto encoder      = [context_impl encoder];
-    if (param_) {
-        encoder.label = [NSString stringWithFormat:@"layer: %s ", param_->name.c_str()];
-    }
+    encoder.label = GetKernelLabel();
 
     auto input  = inputs[0];
     auto output = outputs[0];

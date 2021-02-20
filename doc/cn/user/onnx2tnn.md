@@ -3,6 +3,9 @@
 [English Version](../../en/user/onnx2tnn_en.md)
 
 onnx2tnn 是 TNN 中最重要的模型转换工具，它的主要作用是将 ONNX 模型转换成 TNN 模型格式。目前 onnx2tnn 工具支持主要支持 CNN 常用网络结构。由于 Pytorch 模型官方支持支持导出为 ONNX 模型，并且保证导出的 ONNX 模型和原始的 Pytorch 模型是等效的，所以我们只需要保证 ONNX 模型能够转换为 TNN 模型，就直接能够保证 Pytorch 直接转换为 TNN 模型。
+
+onnx2tnn 有开箱即用的 [网页版](https://convertmodel.com/#outputFormat=tnn)，使用网页版的用户可以跳过环境搭建和编译的步骤。网页版在浏览器本地完成模型转换，不会将模型上传到云端，用户可以不用担心模型安全。
+
 ## 1. 环境搭建及编译
 ### 环境搭建
 以下的环境搭建适用于 Macos 以及 Linux 系统，其中 Linux 以 centos7.2 为例。
@@ -41,8 +44,9 @@ onnx=1.6.0
 onnxruntime>=1.1.0   
 numpy>=1.17.0  
 onnx-simplifier>=0.2.4  
+protobuf>=3.4.0
 ```shell script
-pip3 install onnx==1.6.0 onnxruntime numpy onnx-simplifier
+pip3 install onnx==1.6.0 onnxruntime numpy onnx-simplifier protobuf
 ```
 
 - cmake （version >= 3.0）
@@ -103,30 +107,26 @@ python3 onnx2tnn.py -h
 help 信息如下所示：
 ```text
 usage: onnx2tnn.py [-h] [-version VERSION] [-optimize OPTIMIZE] [-half HALF]
-                   [-o OUTPUT_DIR]
+                   [-o OUTPUT_DIR] [-input_shape INPUT_SHAPE]
                    onnx_model_path
 
 positional arguments:
-  onnx_model_path     Input ONNX model path
+  onnx_model_path       Input ONNX model path
 
 optional arguments:
   -h, --help            show this help message and exit
-  -optimize             optimize the model
-  -half                 save model using half
-  -v v1.0.0             the version for model
-  -o OUTPUT_DIR         the output tnn directory
-  -align                align the onnx model with tnn model
-  -input_file INPUT_FILE_PATH
-                        the input file path which contains the input data for
-                        the inference model.
-  -ref_file REFER_FILE_PATH
-                        the reference file path which contains the reference
-                        data to compare the results.
+  -version VERSION      Algorithm version string
+  -optimize OPTIMIZE    Optimize model befor convert, 1:default yes, 0:no
+  -half HALF            Save model using half, 1:yes, 0:default no
+  -o OUTPUT_DIR         the output dir for tnn model
+  -input_shape INPUT_SHAPE
+                        manually-set static input shape, useful when the input
+                        shape is dynamic
 ```
 
 
 ```shell script
-python3 onnx2tnn.py model.onnx -version=algo_version -optimize=1 -align -input_file=in.txt -ref_file=ref.txt
+python3 onnx2tnn.py model.onnx -version=v1.0 -optimize=1 -half=0 -o out_dir/ -input_shape input:1,3,224,224
 ```
 ```text
 参数说明：
@@ -145,14 +145,8 @@ Note: 实际计算是否用FP16看各个平台特性决定，移动端GPU目前�
 -o
 output_dir : 指定 TNN 模型的存放的文件夹路径，该文件夹必须存在
 
--align
-模型对齐，如需使用模型对齐添加该参数即可。当前仅支持单输入单输出模型和单输入多输出模型。 align 只支持 FP32 模型的校验，所以使用 align 的时候不能使用 half
-
--input_file
-input_file : 指定模型对齐所需要的输入文件的位置
-
--ref_file
-reference_file : 指定模型对齐所需要的对齐文件的位置
+-input_shape
+模型输入的 shape，用于模型动态 batch 的情况
 ```
 
 

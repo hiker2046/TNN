@@ -49,7 +49,7 @@ Status MetalSoftmaxLayerAcc::AllocateBufferParam(const std::vector<Blob *> &inpu
     return TNN_OK;
 }
 
-std::string MetalSoftmaxLayerAcc::KernelName() {
+std::string MetalSoftmaxLayerAcc::KernelName(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs) {
     return "";
 }
 
@@ -70,9 +70,7 @@ Status MetalSoftmaxLayerAcc::Forward(const std::vector<Blob *> &inputs, const st
     auto layer_param = dynamic_cast<SoftmaxLayerParam *>(param_);
     auto context_impl              = context_->getMetalContextImpl();
     auto encoder                   = [context_impl encoder];
-    if (param_) {
-        encoder.label = [NSString stringWithFormat:@"layer: %s ", param_->name.c_str()];
-    }
+    encoder.label = GetKernelLabel();
 
     auto input  = inputs[0];
     auto output = outputs[0];

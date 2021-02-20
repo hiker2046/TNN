@@ -111,7 +111,7 @@ Status MetalConvLayerCommon::Reshape(const std::vector<Blob *> &inputs, const st
     return TNN_OK;
 }
 
-std::string MetalConvLayerCommon::KernelName() {
+std::string MetalConvLayerCommon::KernelName(const std::vector<Blob *> &inputs, const std::vector<Blob *> &outputs) {
     return "convolution_common";
 }
 
@@ -146,9 +146,7 @@ Status MetalConvLayerCommon::Forward(const std::vector<Blob *> &inputs, const st
     
     auto context_impl = context_->getMetalContextImpl();
     auto encoder = [context_impl encoder];
-    if (param_) {
-        encoder.label = [NSString stringWithFormat:@"layer: %s ", param_->name.c_str()];
-    }
+    encoder.label = GetKernelLabel();
     
     int data_byte_size = DataTypeUtils::GetBytesSize(output->GetBlobDesc().data_type);
     
@@ -164,7 +162,7 @@ Status MetalConvLayerCommon::Forward(const std::vector<Blob *> &inputs, const st
         status = ComputeThreadSize(inputs, outputs, threads);
         BREAK_IF(status != TNN_OK);
         
-        auto kernel_name = KernelName();
+        auto kernel_name = KernelName(inputs, outputs);
         if (kernel_name.length() <= 0) {
             status = Status(TNNERR_LAYER_ERR, "empty kernel name");
             break;
